@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
 
-const DEFAULT_SYSTEM_PROMPT = 'You are a friendly desktop pet companion. Keep replies short (1-2 sentences) and playful.';
+const DEFAULT_SYSTEM_PROMPT = 'You are a friendly desktop pet companion. Keep replies short (1-2 sentences) and playful.\nAlways reply in the same language the user used. If the user writes in Chinese, reply in Traditional Chinese (繁體中文) — never Simplified Chinese (简体中文). Otherwise reply in the user\'s language (default English).';
 
 const DEFAULT_STATE = {
   tickers: [],

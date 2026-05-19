@@ -27,7 +27,14 @@ function registerSettingsHandlers({ getMainWindow, getSettingsWindow }) {
     return value;
   });
 
-  ipcMain.handle('settings:set-voice-input', (_event, on) => settingsStore.setVoiceInput(on));
+  ipcMain.handle('settings:set-voice-input', (_event, on) => {
+    const value = settingsStore.setVoiceInput(on);
+    const win = getMainWindow && getMainWindow();
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('voice-input-changed', value);
+    }
+    return value;
+  });
 
   ipcMain.handle('settings:set-system-prompt', (_event, value) => settingsStore.setSystemPrompt(value));
 

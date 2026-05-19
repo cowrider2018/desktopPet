@@ -433,3 +433,31 @@ body.settings-body {
 .prompt-status.visible {
   opacity: 1;
 }
+
+.mic-indicator {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff5252;
+  opacity: 0;
+  transition: opacity 0.2s ease, box-shadow 0.15s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+body.voice-active .mic-indicator {
+  opacity: 0.55;
+}
+
+body.voice-speaking .mic-indicator {
+  opacity: 1;
+  box-shadow: 0 0 8px 2px rgba(255, 82, 82, 0.7);
+}
+
+body.voice-error .mic-indicator {
+  background: #888;
+  opacity: 0.5;
+}

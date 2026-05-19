@@ -54,6 +54,10 @@ function createMainWindow() {
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
+  mainWindow.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
+    callback(permission === 'media' || permission === 'mediaKeySystem');
+  });
+
   mainWindow.loadFile('index.html');
 
   mainWindow.on('close', (event) => {

@@ -13,6 +13,7 @@ Create a `.env` file in the project root with the following keys:
 ```
 FUGLE_MARKETDATA_API_KEY=your_fugle_api_key
 OPENROUTER_API_KEY=your_openrouter_api_key
+GROQ_API_KEY=your_groq_api_key
 TICKER_SYMBOL=1234,5678
 ```
 

@@ -13,6 +13,8 @@ const ASPECT_RATIO_WRAP_THRESHOLD = 10;
 let bubbleEl = null;
 let bubbleTimer = null;
 let isEditing = false;
+let isAwaitingReply = false;
+let isShowingResponse = false;
 
 export function initBubble(el) {
   bubbleEl = el;
@@ -100,6 +102,7 @@ function showChatResponse(text) {
   bubbleEl.classList.remove('hidden');
   void bubbleEl.offsetWidth;
   bubbleEl.classList.add('visible');
+  isShowingResponse = true;
   requestAnimationFrame(reportBubbleSize);
 
   bubbleTimer = setTimeout(() => {
@@ -109,6 +112,7 @@ function showChatResponse(text) {
       bubbleEl.classList.remove('bubble--chat-response');
       clearLayoutStyle();
       resetBubbleSize();
+      isShowingResponse = false;
     }, HIDE_TRANSITION_MS);
     bubbleTimer = null;
   }, RESPONSE_BUBBLE_MS);
@@ -116,9 +120,14 @@ function showChatResponse(text) {
 
 async function submitChat(text) {
   if (!bubbleEl) return;
+  clearHideTimer();
   clearLayoutStyle();
-  bubbleEl.classList.remove('bubble--editing');
+  bubbleEl.classList.remove('bubble--editing', 'bubble--chat-response');
   bubbleEl.textContent = '…';
+  bubbleEl.classList.remove('hidden');
+  void bubbleEl.offsetWidth;
+  bubbleEl.classList.add('visible');
+  isAwaitingReply = true;
   requestAnimationFrame(reportBubbleSize);
 
   let res;
@@ -129,11 +138,22 @@ async function submitChat(text) {
   }
 
   isEditing = false;
+  isAwaitingReply = false;
   if (res && res.ok) {
     showChatResponse(res.text || '(empty reply)');
   } else {
     showChatResponse('⚠ ' + (res?.error || 'unknown error'));
   }
+}
+
+export function submitChatProgrammatic(text) {
+  const value = String(text || '').trim();
+  if (!value) return;
+  submitChat(value);
+}
+
+export function isBubbleBusy() {
+  return isEditing || isAwaitingReply || isShowingResponse;
 }
 
 function cancelEdit() {

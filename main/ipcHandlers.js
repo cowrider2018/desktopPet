@@ -1,6 +1,7 @@
 const { ipcMain, screen } = require('electron');
 const { fetchTicker, getTickerSymbols } = require('./fugleClient');
 const { chat } = require('./openrouterClient');
+const { transcribe } = require('./groqWhisperClient');
 const settingsStore = require('./settingsStore');
 
 function getWorkAreaInfo() {
@@ -91,6 +92,11 @@ function registerIpcHandlers(mainWindow, layout) {
   ipcMain.handle('openrouter:chat', async (_event, userMessage) => {
     const systemPrompt = settingsStore.getSystemPrompt();
     return chat(userMessage, systemPrompt);
+  });
+
+  ipcMain.handle('voice:transcribe', async (_event, arrayBuffer, mimeType) => {
+    const buf = Buffer.from(arrayBuffer);
+    return transcribe(buf, mimeType || 'audio/webm');
   });
 }
 

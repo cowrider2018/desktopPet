@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('petAPI', {
   onScreenInfo: (cb) => ipcRenderer.on('screen-info', (_e, info) => cb(info)),
   onPriceTrackingChanged: (cb) => ipcRenderer.on('price-tracking-changed', (_e, on) => cb(on)),
   chat: (message) => ipcRenderer.invoke('openrouter:chat', message),
+  transcribeAudio: (buffer, mimeType) => ipcRenderer.invoke('voice:transcribe', buffer, mimeType),
+  onVoiceInputChanged: (cb) => ipcRenderer.on('voice-input-changed', (_e, on) => cb(on)),
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
     addTicker: (symbol) => ipcRenderer.invoke('settings:add-ticker', symbol),

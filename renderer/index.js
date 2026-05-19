@@ -1,6 +1,7 @@
 import { pick } from './utils.js';
 import { initSprite, isOverPetBody } from './sprite.js';
 import { initBubble, showBubble, clickLines, enterEditMode, isBubbleEditing } from './bubble.js';
+import { setVoiceEnabled } from './voice.js';
 import {
   initAnimations,
   playAnimation,
@@ -50,17 +51,20 @@ window.addEventListener('mouseleave', () => {
   if (!isBubbleEditing()) setIgnore(true);
 });
 
+let voiceOn = false;
+
 pet.addEventListener('click', (e) => {
   e.preventDefault();
   if (consumeWasDragging()) return;
   if (isBubbleEditing()) return;
-  showBubble(pick(clickLines), CLICK_BUBBLE_MS);
+  if (!voiceOn) showBubble(pick(clickLines), CLICK_BUBBLE_MS);
   playAnimation(pick(clickAnimations));
 });
 
 bubble.addEventListener('click', (e) => {
   e.preventDefault();
   e.stopPropagation();
+  if (voiceOn) return;
   enterEditMode();
 });
 
@@ -86,3 +90,18 @@ attachDragHandlers(pet);
 initPlacement();
 window.petAPI.onScreenInfo(onScreenInfoUpdate);
 startTickerLoop();
+
+window.petAPI.onVoiceInputChanged((on) => {
+  voiceOn = !!on;
+  setVoiceEnabled(voiceOn);
+});
+
+(async () => {
+  try {
+    const state = await window.petAPI.settings.get();
+    voiceOn = !!state.voiceInput;
+    if (voiceOn) setVoiceEnabled(true);
+  } catch (err) {
+    console.warn('[voice] initial settings fetch failed:', err);
+  }
+})();
