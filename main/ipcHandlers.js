@@ -74,6 +74,16 @@ function registerIpcHandlers(mainWindow, layout) {
     mainWindow.setPosition(Math.round(x), Math.round(y));
   });
 
+  ipcMain.on('set-window-bounds', (_event, x, y, width, height) => {
+    if (!mainWindow) return;
+    mainWindow.setBounds({
+      x: Math.round(x),
+      y: Math.round(y),
+      width: Math.round(width),
+      height: Math.round(height)
+    });
+  });
+
   ipcMain.handle('fetch-ticker', async (_event, symbol) => fetchTicker(symbol));
 
   ipcMain.handle('get-ticker-symbols', () => getTickerSymbols());

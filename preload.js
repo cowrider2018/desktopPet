@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('petAPI', {
   getScreenInfo: () => ipcRenderer.invoke('get-screen-info'),
   getWindowPosition: () => ipcRenderer.invoke('get-window-position'),
   moveWindow: (x, y) => ipcRenderer.send('move-window', x, y),
+  setWindowBounds: (x, y, width, height) => ipcRenderer.send('set-window-bounds', x, y, width, height),
   setBubbleWidth: (width) => ipcRenderer.send('set-bubble-width', width),
   setBubbleSize: (width, height) => ipcRenderer.send('set-bubble-size', width, height),
   onScreenInfo: (cb) => ipcRenderer.on('screen-info', (_e, info) => cb(info)),

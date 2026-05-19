@@ -9,15 +9,19 @@ let petEl = null;
 
 let screenInfo = null;         // { workX, workY, width, height }
 let screenCenterX = null;
+let layoutInfo = null;         // { petWidth, petHeight, petHPadding, bubbleHeight, jumpHeadroom, winWidth, winHeight }
 let lastWinX = 0;
 let lastWinY = 0;
 let currentlyIgnoring = true;
 let isDragging = false;
+let dragExpanded = false;
 let dragPointerId = null;
 let dragStartScreenX = 0;
 let dragStartScreenY = 0;
-let dragWinStartX = 0;
-let dragWinStartY = 0;
+let petScreenStartX = 0;
+let petScreenStartY = 0;
+let petScreenX = 0;
+let petScreenY = 0;
 let dragMaxDelta = 0;
 let wasDragging = false;
 let fallRAF = null;
@@ -40,14 +44,25 @@ export function consumeWasDragging() {
   return v;
 }
 
+export function getIsDragging() {
+  return isDragging;
+}
+
 function floorY() {
-  if (!screenInfo) return null;
-  return screenInfo.workY + screenInfo.height - window.innerHeight;
+  if (!screenInfo || !layoutInfo) return null;
+  return screenInfo.workY + screenInfo.height - layoutInfo.winHeight;
 }
 
 function setFacingFromWinX(winX) {
-  if (screenCenterX == null) return;
-  const petCenterX = winX + window.innerWidth / 2;
+  if (screenCenterX == null || !layoutInfo) return;
+  const petCenterX = winX + layoutInfo.winWidth / 2;
+  const faceLeft = petCenterX > screenCenterX;
+  document.body.classList.toggle('face-left', faceLeft);
+}
+
+function setFacingFromPetScreenX(px) {
+  if (screenCenterX == null || !layoutInfo) return;
+  const petCenterX = px + layoutInfo.petWidth / 2;
   const faceLeft = petCenterX > screenCenterX;
   document.body.classList.toggle('face-left', faceLeft);
 }
@@ -94,11 +109,11 @@ function startFall() {
 }
 
 export async function initPlacement() {
-  const layout = await window.petAPI.getLayout();
+  layoutInfo = await window.petAPI.getLayout();
   const rootStyle = document.documentElement.style;
-  rootStyle.setProperty('--pet-width', `${layout.petWidth}px`);
-  rootStyle.setProperty('--pet-height', `${layout.petHeight}px`);
-  rootStyle.setProperty('--bubble-height', `${layout.bubbleHeight}px`);
+  rootStyle.setProperty('--pet-width', `${layoutInfo.petWidth}px`);
+  rootStyle.setProperty('--pet-height', `${layoutInfo.petHeight}px`);
+  rootStyle.setProperty('--bubble-height', `${layoutInfo.bubbleHeight}px`);
 
   screenInfo = await window.petAPI.getScreenInfo();
   screenCenterX = screenInfo.workX + screenInfo.width / 2;
@@ -115,22 +130,54 @@ export function onScreenInfoUpdate(info) {
   if (!isDragging) startFall();
 }
 
+function expandForDrag() {
+  if (dragExpanded || !screenInfo || !layoutInfo) return;
+  dragExpanded = true;
+  document.body.classList.add('dragging-expanded');
+  petEl.style.left = `${petScreenX - screenInfo.workX}px`;
+  petEl.style.top = `${petScreenY - screenInfo.workY}px`;
+  window.petAPI.setWindowBounds(
+    screenInfo.workX,
+    screenInfo.workY,
+    screenInfo.width,
+    screenInfo.height
+  );
+}
+
+function collapseAfterDrag() {
+  if (!dragExpanded || !layoutInfo) return;
+  dragExpanded = false;
+  const newWinX = Math.round(petScreenX - layoutInfo.petHPadding);
+  const newWinY = Math.round(petScreenY - layoutInfo.bubbleHeight - layoutInfo.jumpHeadroom);
+  document.body.classList.remove('dragging-expanded');
+  petEl.style.left = '';
+  petEl.style.top = '';
+  window.petAPI.setWindowBounds(newWinX, newWinY, layoutInfo.winWidth, layoutInfo.winHeight);
+  lastWinX = newWinX;
+  lastWinY = newWinY;
+  setFacingFromWinX(newWinX);
+}
+
 export function attachDragHandlers(el) {
   petEl = el;
 
   petEl.addEventListener('pointerdown', async (e) => {
     if (e.button !== 0) return;
+    if (!layoutInfo) return;
     cancelFall();
     dragPointerId = e.pointerId;
     dragStartScreenX = e.screenX;
     dragStartScreenY = e.screenY;
     dragMaxDelta = 0;
     const [wx, wy] = await window.petAPI.getWindowPosition();
-    dragWinStartX = wx;
-    dragWinStartY = wy;
     lastWinX = wx;
     lastWinY = wy;
+    petScreenStartX = wx + layoutInfo.petHPadding;
+    petScreenStartY = wy + layoutInfo.bubbleHeight + layoutInfo.jumpHeadroom;
+    petScreenX = petScreenStartX;
+    petScreenY = petScreenStartY;
     isDragging = true;
+    dragExpanded = false;
     setIgnore(false);
     try { petEl.setPointerCapture(e.pointerId); } catch {}
     document.body.classList.add('dragging');
@@ -143,8 +190,16 @@ export function attachDragHandlers(el) {
     const dist = Math.hypot(dx, dy);
     if (dist > dragMaxDelta) dragMaxDelta = dist;
     if (dragMaxDelta < DRAG_THRESHOLD_PX) return;
-    setSprite('squat');
-    moveTo(dragWinStartX + dx, dragWinStartY + dy);
+    petScreenX = petScreenStartX + dx;
+    petScreenY = petScreenStartY + dy;
+    if (!dragExpanded) {
+      setSprite('squat');
+      expandForDrag();
+    } else {
+      petEl.style.left = `${petScreenX - screenInfo.workX}px`;
+      petEl.style.top = `${petScreenY - screenInfo.workY}px`;
+      setFacingFromPetScreenX(petScreenX);
+    }
   });
 
   const endDrag = (e) => {
@@ -154,6 +209,7 @@ export function attachDragHandlers(el) {
     document.body.classList.remove('dragging');
     wasDragging = dragMaxDelta >= DRAG_THRESHOLD_PX;
     dragPointerId = null;
+    if (dragExpanded) collapseAfterDrag();
     if (!getIsAnimating()) setSprite('normal');
     startFall();
   };

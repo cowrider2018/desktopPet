@@ -13,7 +13,8 @@ import {
   attachDragHandlers,
   onScreenInfoUpdate,
   setIgnore,
-  consumeWasDragging
+  consumeWasDragging,
+  getIsDragging
 } from './dragMove.js';
 import { startTickerLoop } from './ticker.js';
 
@@ -39,11 +40,13 @@ function isOverBubble(clientX, clientY) {
 }
 
 window.addEventListener('mousemove', (e) => {
+  if (getIsDragging()) return;
   const overPet = isOverPetBody(e.clientX, e.clientY, getIsAnimating());
   const overBubble = isOverBubble(e.clientX, e.clientY);
   setIgnore(!(overPet || overBubble));
 });
 window.addEventListener('mouseleave', () => {
+  if (getIsDragging()) return;
   if (!isBubbleEditing()) setIgnore(true);
 });
 

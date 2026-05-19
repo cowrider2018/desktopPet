@@ -33,6 +33,14 @@ body.dragging #sprite {
   cursor: grabbing;
 }
 
+body.dragging-expanded #stage {
+  display: block;
+}
+
+body.dragging-expanded .pet {
+  position: absolute;
+}
+
 body.face-left #sprite {
   transform: scaleX(-1);
 }

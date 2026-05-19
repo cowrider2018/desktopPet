@@ -201,6 +201,7 @@ app.whenReady().then(() => {
     petWidth: PET_WIDTH,
     petHeight: PET_HEIGHT,
     bubbleHeight: BUBBLE_HEIGHT,
+    jumpHeadroom: JUMP_HEADROOM,
     petHPadding: PET_H_PADDING,
     winWidth: WIN_WIDTH,
     winHeight: WIN_HEIGHT
