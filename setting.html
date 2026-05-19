@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Settings</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="settings-body">
+  <main class="settings">
+    <section class="row toggle-row">
+      <label for="toggle-pet-visible">Show Pet</label>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-pet-visible" />
+        <span class="track"></span>
+      </label>
+    </section>
+
+    <section class="block">
+      <h3>Tickers</h3>
+      <ul id="ticker-list" class="ticker-list"></ul>
+      <form id="ticker-add" class="ticker-add" autocomplete="off">
+        <input type="text" id="ticker-input" placeholder="e.g. TSLA" maxlength="16" />
+        <button type="submit">Add</button>
+      </form>
+    </section>
+
+    <section class="row toggle-row">
+      <label for="toggle-price-tracking">Market Data</label>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-price-tracking" />
+        <span class="track"></span>
+      </label>
+    </section>
+
+    <section class="row toggle-row">
+      <label for="toggle-voice-input">Voice Input</label>
+      <label class="toggle">
+        <input type="checkbox" id="toggle-voice-input" />
+        <span class="track"></span>
+      </label>
+    </section>
+
+    <section class="block">
+      <details id="system-prompt-details" class="system-prompt-block">
+        <summary class="system-prompt-summary">System Prompt</summary>
+        <textarea id="system-prompt" class="system-prompt-textarea" rows="6" placeholder="Character / role instructions…"></textarea>
+        <div class="system-prompt-actions">
+          <button type="button" id="system-prompt-save" class="system-prompt-save">Save</button>
+          <span id="system-prompt-status" class="prompt-status"></span>
+        </div>
+      </details>
+    </section>
+  </main>
+  <script type="module" src="renderer/settings.js"></script>
+</body>
+</html>

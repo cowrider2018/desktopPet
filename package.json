@@ -1,0 +1,32 @@
+{
+  "name": "desktop-pet",
+  "version": "1.0.0",
+  "description": "Always-on-top desktop pet built with Electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "@fugle/marketdata": "^1.4.2",
+    "dotenv": "^17.4.2"
+  },
+  "build": {
+    "appId": "com.johnyou.desktoppet",
+    "productName": "DesktopPet",
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
