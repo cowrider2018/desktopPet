@@ -1,5 +1,9 @@
 import { setSprite } from './sprite.js';
-import { getWinPosition, getHorizontalBounds, slideTo, cancelSlide } from './dragMove.js';
+import { getWinPosition, getHorizontalBounds, slideTo, cancelSlide, setFacing } from './dragMove.js';
+
+function logAnimClass(action, name, source) {
+  console.log('[debug] anim-class:', `${action === 'remove' ? '-' : '+'}${name}`, `(${source})`);
+}
 
 export const animations = ['jump', 'walk', 'wiggle'];
 export const clickAnimations = ['jump', 'wiggle'];
@@ -28,6 +32,7 @@ export function playAnimation(name) {
   if (name === 'walk') { playWalk(); return; }
   isAnimating = true;
   petEl.classList.remove('idle');
+  logAnimClass('remove', 'idle', `playAnimation:${name}`);
 
   if (name === 'jump') {
     setSprite('squat');
@@ -36,10 +41,13 @@ export function playAnimation(name) {
     setSprite('roar');
   }
   petEl.classList.add(name);
+  logAnimClass('add', name, 'playAnimation');
 
   const onEnd = () => {
     petEl.classList.remove(name);
+    logAnimClass('remove', name, 'playAnimation:end');
     petEl.classList.add('idle');
+    logAnimClass('add', 'idle', 'playAnimation:end');
     setSprite('normal');
     petEl.removeEventListener('animationend', onEnd);
     isAnimating = false;
@@ -66,6 +74,7 @@ async function playWalk() {
 
   isAnimating = true;
   petEl.classList.remove('idle');
+  logAnimClass('remove', 'idle', 'playWalk');
 
   let direction = Math.random() < 0.5 ? -1 : 1;
   let distance = Math.round(WALK_MIN_PX + Math.random() * (WALK_MAX_PX - WALK_MIN_PX));
@@ -76,7 +85,7 @@ async function playWalk() {
   }
   const actualDistance = Math.abs(targetX - pos.x);
 
-  document.body.classList.toggle('face-left', direction < 0);
+  setFacing(direction < 0, 'playWalk');
 
   let frame = 0;
   setSprite('walk1');
@@ -91,6 +100,7 @@ async function playWalk() {
   stopWalkFrames();
   setSprite('normal');
   petEl.classList.add('idle');
+  logAnimClass('add', 'idle', 'playWalk:end');
   isAnimating = false;
 }
 
@@ -139,6 +149,7 @@ export function playEmotionSequence(emotion) {
 
   isAnimating = true;
   petEl.classList.remove('idle');
+  logAnimClass('remove', 'idle', `playEmotionSequence:${emotion}`);
   const initialFaceLeft = document.body.classList.contains('face-left');
 
   let cumulative = 0;
@@ -146,20 +157,32 @@ export function playEmotionSequence(emotion) {
 
   stages.forEach((stage, i) => {
     sequenceTimers.push(setTimeout(() => {
-      for (const c of stageClasses) petEl.classList.remove(c);
+      for (const c of stageClasses) {
+        if (petEl.classList.contains(c)) {
+          petEl.classList.remove(c);
+          logAnimClass('remove', c, `emo:${emotion}:stage${i}`);
+        }
+      }
       petEl.classList.add(stage.cssClass);
+      logAnimClass('add', stage.cssClass, `emo:${emotion}:stage${i}`);
       setSprite(stage.sprite);
-      if (stage.face === 'left') document.body.classList.add('face-left');
-      else if (stage.face === 'right') document.body.classList.remove('face-left');
+      if (stage.face === 'left') setFacing(true, `emo:${emotion}:stage${i}`);
+      else if (stage.face === 'right') setFacing(false, `emo:${emotion}:stage${i}`);
     }, cumulative));
     cumulative += stage.durationMs;
   });
 
   sequenceTimers.push(setTimeout(() => {
-    for (const c of stageClasses) petEl.classList.remove(c);
+    for (const c of stageClasses) {
+      if (petEl.classList.contains(c)) {
+        petEl.classList.remove(c);
+        logAnimClass('remove', c, `emo:${emotion}:cleanup`);
+      }
+    }
     setSprite('normal');
-    document.body.classList.toggle('face-left', initialFaceLeft);
+    setFacing(initialFaceLeft, `emo:${emotion}:restore`);
     petEl.classList.add('idle');
+    logAnimClass('add', 'idle', `emo:${emotion}:cleanup`);
     isAnimating = false;
     sequenceTimers = [];
   }, cumulative));

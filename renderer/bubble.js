@@ -14,6 +14,7 @@ const ASPECT_RATIO_WRAP_THRESHOLD = 10;
 
 let bubbleEl = null;
 let bubbleTimer = null;
+let bubbleCleanupTimer = null;
 let isEditing = false;
 let isAwaitingReply = false;
 let isShowingResponse = false;
@@ -48,15 +49,14 @@ function reportBubbleSize() {
   window.petAPI.setBubbleSize(width, height);
 }
 
-function resetBubbleSize() {
-  if (!window.petAPI?.setBubbleSize) return;
-  window.petAPI.setBubbleSize(0, 0);
-}
-
 function clearHideTimer() {
   if (bubbleTimer) {
     clearTimeout(bubbleTimer);
     bubbleTimer = null;
+  }
+  if (bubbleCleanupTimer) {
+    clearTimeout(bubbleCleanupTimer);
+    bubbleCleanupTimer = null;
   }
 }
 
@@ -64,13 +64,13 @@ function hideBubble() {
   if (!bubbleEl) return;
   clearHideTimer();
   bubbleEl.classList.remove('visible');
-  setTimeout(() => {
+  bubbleCleanupTimer = setTimeout(() => {
+    bubbleCleanupTimer = null;
     if (!bubbleEl) return;
     bubbleEl.classList.add('hidden');
     bubbleEl.classList.remove('bubble--editing', 'bubble--chat-response');
     bubbleEl.textContent = '';
     clearLayoutStyle();
-    resetBubbleSize();
   }, HIDE_TRANSITION_MS);
 }
 
@@ -86,10 +86,10 @@ export function showBubble(text, duration = 4000) {
 
   bubbleTimer = setTimeout(() => {
     bubbleEl.classList.remove('visible');
-    setTimeout(() => {
+    bubbleCleanupTimer = setTimeout(() => {
+      bubbleCleanupTimer = null;
       bubbleEl.classList.add('hidden');
       clearLayoutStyle();
-      resetBubbleSize();
     }, HIDE_TRANSITION_MS);
     bubbleTimer = null;
   }, duration);
@@ -110,11 +110,11 @@ function showChatResponse(text, emotion) {
 
   bubbleTimer = setTimeout(() => {
     bubbleEl.classList.remove('visible');
-    setTimeout(() => {
+    bubbleCleanupTimer = setTimeout(() => {
+      bubbleCleanupTimer = null;
       bubbleEl.classList.add('hidden');
       bubbleEl.classList.remove('bubble--chat-response');
       clearLayoutStyle();
-      resetBubbleSize();
       isShowingResponse = false;
     }, HIDE_TRANSITION_MS);
     bubbleTimer = null;

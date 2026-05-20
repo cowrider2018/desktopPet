@@ -24,12 +24,12 @@ function registerIpcHandlers(mainWindow, layout) {
     const deltaW = desiredExtraW - currentExtraW;
     const deltaH = desiredExtraH - currentExtraH;
     const [x, y] = mainWindow.getPosition();
-    mainWindow.setBounds({
-      x: Math.round(x - deltaW / 2),
-      y: Math.round(y - deltaH),
-      width: layout.winWidth + desiredExtraW,
-      height: layout.winHeight + desiredExtraH
-    });
+    const nextX = Math.round(x - deltaW / 2);
+    const nextY = Math.round(y - deltaH);
+    const nextW = layout.winWidth + desiredExtraW;
+    const nextH = layout.winHeight + desiredExtraH;
+    process.stdout.write(`[debug] bounds-extra: ${nextX} ${nextY} ${nextW} ${nextH} (extraW=${desiredExtraW} extraH=${desiredExtraH})\n`);
+    mainWindow.setBounds({ x: nextX, y: nextY, width: nextW, height: nextH });
 
     currentExtraW = desiredExtraW;
     currentExtraH = desiredExtraH;

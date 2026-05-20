@@ -55,18 +55,39 @@ function floorY() {
   return screenInfo.workY + screenInfo.height - layoutInfo.winHeight;
 }
 
+export function setFacing(faceLeft, source) {
+  const prev = document.body.classList.contains('face-left');
+  document.body.classList.toggle('face-left', !!faceLeft);
+  if (!!faceLeft !== prev) {
+    console.log('[debug] facing changed:', faceLeft ? 'left' : 'right', `(${source || 'unknown'})`);
+  }
+}
+
 function setFacingFromWinX(winX) {
   if (screenCenterX == null || !layoutInfo) return;
   const petCenterX = winX + layoutInfo.winWidth / 2;
-  const faceLeft = petCenterX > screenCenterX;
-  document.body.classList.toggle('face-left', faceLeft);
+  setFacing(petCenterX > screenCenterX, 'winX');
 }
 
 function setFacingFromPetScreenX(px) {
   if (screenCenterX == null || !layoutInfo) return;
   const petCenterX = px + layoutInfo.petWidth / 2;
-  const faceLeft = petCenterX > screenCenterX;
-  document.body.classList.toggle('face-left', faceLeft);
+  setFacing(petCenterX > screenCenterX, 'petScreenX');
+}
+
+let lastDragMoveX = null;
+let lastDragMoveY = null;
+function logDragMove(x, y, source) {
+  const rx = Math.round(x);
+  const ry = Math.round(y);
+  if (rx === lastDragMoveX && ry === lastDragMoveY) return;
+  lastDragMoveX = rx;
+  lastDragMoveY = ry;
+  console.log('[debug] drag-move:', rx, ry, `(${source})`);
+}
+
+function logBounds(x, y, w, h, source) {
+  console.log('[debug] bounds:', Math.round(x), Math.round(y), Math.round(w), Math.round(h), `(${source})`);
 }
 
 function moveTo(x, y) {
@@ -74,6 +95,7 @@ function moveTo(x, y) {
     console.warn('[dragMove] moveTo skipped: non-finite coords', { x, y });
     return;
   }
+  console.log('[debug] move:', Math.round(x), Math.round(y));
   lastWinX = x;
   lastWinY = y;
   window.petAPI.moveWindow(x, y);
@@ -186,8 +208,12 @@ function expandForDrag() {
   if (dragExpanded || !screenInfo || !layoutInfo) return;
   dragExpanded = true;
   document.body.classList.add('dragging-expanded');
-  petEl.style.left = `${petScreenX - screenInfo.workX}px`;
-  petEl.style.top = `${petScreenY - screenInfo.workY}px`;
+  const localX = petScreenX - screenInfo.workX;
+  const localY = petScreenY - screenInfo.workY;
+  petEl.style.left = `${localX}px`;
+  petEl.style.top = `${localY}px`;
+  logDragMove(localX, localY, 'expandForDrag');
+  logBounds(screenInfo.workX, screenInfo.workY, screenInfo.width, screenInfo.height, 'expandForDrag');
   window.petAPI.setWindowBounds(
     screenInfo.workX,
     screenInfo.workY,
@@ -204,6 +230,8 @@ function collapseAfterDrag() {
   document.body.classList.remove('dragging-expanded');
   petEl.style.left = '';
   petEl.style.top = '';
+  logDragMove(0, 0, 'collapseAfterDrag-clear');
+  logBounds(newWinX, newWinY, layoutInfo.winWidth, layoutInfo.winHeight, 'collapseAfterDrag');
   window.petAPI.setWindowBounds(newWinX, newWinY, layoutInfo.winWidth, layoutInfo.winHeight);
   lastWinX = newWinX;
   lastWinY = newWinY;
@@ -249,8 +277,11 @@ export function attachDragHandlers(el) {
       setSprite('squat');
       expandForDrag();
     } else {
-      petEl.style.left = `${petScreenX - screenInfo.workX}px`;
-      petEl.style.top = `${petScreenY - screenInfo.workY}px`;
+      const localX = petScreenX - screenInfo.workX;
+      const localY = petScreenY - screenInfo.workY;
+      petEl.style.left = `${localX}px`;
+      petEl.style.top = `${localY}px`;
+      logDragMove(localX, localY, 'pointermove');
       setFacingFromPetScreenX(petScreenX);
     }
   });
