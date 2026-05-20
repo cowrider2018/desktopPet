@@ -70,6 +70,10 @@ function setFacingFromPetScreenX(px) {
 }
 
 function moveTo(x, y) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    console.warn('[dragMove] moveTo skipped: non-finite coords', { x, y });
+    return;
+  }
   lastWinX = x;
   lastWinY = y;
   window.petAPI.moveWindow(x, y);
