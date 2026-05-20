@@ -17,7 +17,7 @@ import {
   consumeWasDragging,
   getIsDragging
 } from './dragMove.js';
-import { startTickerLoop } from './ticker.js';
+import { startTickerLoop, isTickerActive } from './ticker.js';
 
 const RANDOM_BEHAVIOR_INTERVAL_MS = 5000;
 const RANDOM_ACTION_PROBABILITY = 0.5;
@@ -82,7 +82,7 @@ setInterval(() => {
   if (!getIsAnimating() && Math.random() < RANDOM_ACTION_PROBABILITY) {
     playAnimation(pick(animations));
   }
-  if (!voiceOn && !isBubbleBusy() && Math.random() < RANDOM_TALK_PROBABILITY) {
+  if (!voiceOn && !isBubbleBusy() && !isTickerActive() && Math.random() < RANDOM_TALK_PROBABILITY) {
     showBubble(pick(clickLines), CLICK_BUBBLE_MS);
   }
 }, RANDOM_BEHAVIOR_INTERVAL_MS);
