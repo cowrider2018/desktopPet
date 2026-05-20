@@ -1,5 +1,5 @@
 import { setSprite } from './sprite.js';
-import { getIsAnimating } from './animations.js';
+import { getIsAnimating, cancelWalk } from './animations.js';
 
 const DRAG_THRESHOLD_PX = 4;
 const GRAVITY = 2200;          // px/s^2
@@ -27,6 +27,8 @@ let wasDragging = false;
 let fallRAF = null;
 let fallVelocity = 0;
 let lastFallTs = 0;
+let slideRAF = null;
+let slideResolve = null;
 
 export function setIgnore(ignore) {
   if (ignore === currentlyIgnoring) return;
@@ -98,6 +100,55 @@ function stepFall(ts) {
   fallRAF = requestAnimationFrame(stepFall);
 }
 
+export function getWinPosition() {
+  return { x: lastWinX, y: lastWinY };
+}
+
+export function getHorizontalBounds() {
+  if (!screenInfo || !layoutInfo) return null;
+  const minX = screenInfo.workX - layoutInfo.petHPadding;
+  const maxX = screenInfo.workX + screenInfo.width - layoutInfo.winWidth + layoutInfo.petHPadding;
+  return { minX, maxX };
+}
+
+export function cancelSlide() {
+  if (slideRAF != null) {
+    cancelAnimationFrame(slideRAF);
+    slideRAF = null;
+  }
+  if (slideResolve) {
+    const r = slideResolve;
+    slideResolve = null;
+    r({ cancelled: true });
+  }
+}
+
+export function slideTo(targetX, durationMs) {
+  cancelSlide();
+  return new Promise((resolve) => {
+    if (!layoutInfo || !screenInfo) { resolve({ cancelled: true }); return; }
+    const startX = lastWinX;
+    const startY = lastWinY;
+    const startTs = performance.now();
+    const dur = Math.max(1, durationMs);
+    slideResolve = resolve;
+    const step = (ts) => {
+      const t = Math.min(1, (ts - startTs) / dur);
+      const x = Math.round(startX + (targetX - startX) * t);
+      moveTo(x, startY);
+      if (t >= 1) {
+        slideRAF = null;
+        const r = slideResolve;
+        slideResolve = null;
+        if (r) r({ cancelled: false });
+        return;
+      }
+      slideRAF = requestAnimationFrame(step);
+    };
+    slideRAF = requestAnimationFrame(step);
+  });
+}
+
 function startFall() {
   const floor = floorY();
   if (floor == null) return;
@@ -161,6 +212,8 @@ export function attachDragHandlers(el) {
     if (e.button !== 0) return;
     if (!layoutInfo) return;
     cancelFall();
+    cancelSlide();
+    cancelWalk();
     dragPointerId = e.pointerId;
     dragStartScreenX = e.screenX;
     dragStartScreenY = e.screenY;

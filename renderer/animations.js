@@ -1,13 +1,19 @@
 import { setSprite } from './sprite.js';
+import { getWinPosition, getHorizontalBounds, slideTo, cancelSlide } from './dragMove.js';
 
 export const animations = ['jump', 'walk', 'wiggle'];
 export const clickAnimations = ['jump', 'wiggle'];
 
 const SQUAT_TO_ROAR_MS = 130;
+const WALK_MIN_PX = 180;
+const WALK_MAX_PX = 720;
+const WALK_SPEED_PX_PER_MS = 0.18;
+const WALK_FRAME_MS = 180;
 
 let petEl = null;
 let isAnimating = false;
 let sequenceTimers = [];
+let walkFrameTimer = null;
 
 export function initAnimations(el) {
   petEl = el;
@@ -19,6 +25,7 @@ export function getIsAnimating() {
 
 export function playAnimation(name) {
   if (isAnimating || !petEl) return;
+  if (name === 'walk') { playWalk(); return; }
   isAnimating = true;
   petEl.classList.remove('idle');
 
@@ -38,6 +45,53 @@ export function playAnimation(name) {
     isAnimating = false;
   };
   petEl.addEventListener('animationend', onEnd);
+}
+
+function stopWalkFrames() {
+  if (walkFrameTimer != null) {
+    clearInterval(walkFrameTimer);
+    walkFrameTimer = null;
+  }
+}
+
+export function cancelWalk() {
+  stopWalkFrames();
+  cancelSlide();
+}
+
+async function playWalk() {
+  const bounds = getHorizontalBounds();
+  const pos = getWinPosition();
+  if (!bounds || !pos) return;
+
+  isAnimating = true;
+  petEl.classList.remove('idle');
+
+  let direction = Math.random() < 0.5 ? -1 : 1;
+  let distance = Math.round(WALK_MIN_PX + Math.random() * (WALK_MAX_PX - WALK_MIN_PX));
+  let targetX = Math.max(bounds.minX, Math.min(bounds.maxX, pos.x + direction * distance));
+  if (Math.abs(targetX - pos.x) < 30) {
+    direction = -direction;
+    targetX = Math.max(bounds.minX, Math.min(bounds.maxX, pos.x + direction * distance));
+  }
+  const actualDistance = Math.abs(targetX - pos.x);
+
+  document.body.classList.toggle('face-left', direction < 0);
+
+  let frame = 0;
+  setSprite('walk1');
+  walkFrameTimer = setInterval(() => {
+    frame = 1 - frame;
+    setSprite(frame === 0 ? 'walk1' : 'walk2');
+  }, WALK_FRAME_MS);
+
+  const durationMs = Math.max(120, Math.round(actualDistance / WALK_SPEED_PX_PER_MS));
+  await slideTo(targetX, durationMs);
+
+  stopWalkFrames();
+  setSprite('normal');
+  petEl.classList.add('idle');
+  isAnimating = false;
 }
 
 // Multi-stage body-language sequences played in reaction to LLM emotion.

@@ -1,6 +1,6 @@
 import { pick } from './utils.js';
 import { initSprite, isOverPetBody } from './sprite.js';
-import { initBubble, showBubble, clickLines, enterEditMode, isBubbleEditing } from './bubble.js';
+import { initBubble, showBubble, clickLines, enterEditMode, isBubbleEditing, isBubbleBusy } from './bubble.js';
 import { setVoiceEnabled } from './voice.js';
 import {
   initAnimations,
@@ -19,8 +19,9 @@ import {
 } from './dragMove.js';
 import { startTickerLoop } from './ticker.js';
 
-const RANDOM_BEHAVIOR_INTERVAL_MS = 15000;
-const RANDOM_BEHAVIOR_PROBABILITY = 0.25;
+const RANDOM_BEHAVIOR_INTERVAL_MS = 5000;
+const RANDOM_ACTION_PROBABILITY = 0.5;
+const RANDOM_TALK_PROBABILITY = 0.5;
 const CLICK_BUBBLE_MS = 3000;
 const HELLO_BUBBLE_MS = 4500;
 const HELLO_DELAY_MS = 800;
@@ -78,9 +79,11 @@ pet.addEventListener('contextmenu', (e) => {
 });
 
 setInterval(() => {
-  if (getIsAnimating()) return;
-  if (Math.random() < RANDOM_BEHAVIOR_PROBABILITY) {
+  if (!getIsAnimating() && Math.random() < RANDOM_ACTION_PROBABILITY) {
     playAnimation(pick(animations));
+  }
+  if (!voiceOn && !isBubbleBusy() && Math.random() < RANDOM_TALK_PROBABILITY) {
+    showBubble(pick(clickLines), CLICK_BUBBLE_MS);
   }
 }, RANDOM_BEHAVIOR_INTERVAL_MS);
 
