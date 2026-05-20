@@ -71,7 +71,6 @@ function moveTo(x, y) {
   lastWinX = x;
   lastWinY = y;
   window.petAPI.moveWindow(x, y);
-  setFacingFromWinX(x);
 }
 
 function cancelFall() {
@@ -120,13 +119,11 @@ export async function initPlacement() {
   const [winX, winY] = await window.petAPI.getWindowPosition();
   lastWinX = winX;
   lastWinY = winY;
-  setFacingFromWinX(winX);
 }
 
 export function onScreenInfoUpdate(info) {
   screenInfo = info;
   screenCenterX = info.workX + info.width / 2;
-  setFacingFromWinX(lastWinX);
   if (!isDragging) startFall();
 }
 
@@ -155,7 +152,6 @@ function collapseAfterDrag() {
   window.petAPI.setWindowBounds(newWinX, newWinY, layoutInfo.winWidth, layoutInfo.winHeight);
   lastWinX = newWinX;
   lastWinY = newWinY;
-  setFacingFromWinX(newWinX);
 }
 
 export function attachDragHandlers(el) {

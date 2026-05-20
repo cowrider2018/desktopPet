@@ -1,3 +1,5 @@
+import { playEmotionSequence } from './animations.js';
+
 export const clickLines = [
   "Go drink water!",
   "I'm watching you... 👀",
@@ -93,7 +95,7 @@ export function showBubble(text, duration = 4000) {
   }, duration);
 }
 
-function showChatResponse(text) {
+function showChatResponse(text, emotion) {
   if (!bubbleEl) return;
   clearHideTimer();
   bubbleEl.classList.add('bubble--chat-response');
@@ -104,6 +106,7 @@ function showChatResponse(text) {
   bubbleEl.classList.add('visible');
   isShowingResponse = true;
   requestAnimationFrame(reportBubbleSize);
+  if (emotion) playEmotionSequence(emotion);
 
   bubbleTimer = setTimeout(() => {
     bubbleEl.classList.remove('visible');
@@ -140,7 +143,7 @@ async function submitChat(text) {
   isEditing = false;
   isAwaitingReply = false;
   if (res && res.ok) {
-    showChatResponse(res.text || '(empty reply)');
+    showChatResponse(res.text || '(empty reply)', res.emotion);
   } else {
     showChatResponse('⚠ ' + (res?.error || 'unknown error'));
   }
