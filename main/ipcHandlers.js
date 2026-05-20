@@ -1,6 +1,6 @@
 const { ipcMain, screen } = require('electron');
 const { fetchTicker, getTickerSymbols } = require('./fugleClient');
-const { chat } = require('./openrouterClient');
+const { chat } = require('./geminiClient');
 const { transcribe } = require('./groqWhisperClient');
 const settingsStore = require('./settingsStore');
 
