@@ -19,6 +19,7 @@ TICKER_SYMBOL=1234,5678
 
 - `FUGLE_MARKETDATA_API_KEY` — required to fetch quotes. Obtain one from [Fugle MarketData](https://developer.fugle.tw/).
 - `GOOGLE_AI_STUDIO_API_KEY` — powers the chat bubble via Google AI Studio (model: `gemini-3.1-flash-lite`).
+- `GROQ_API_KEY` — required for the voice input feature. (model: `whisper-large-v3-turbo`).
 - `TICKER_SYMBOL` — comma-separated list of Taiwan stock symbols to cycle through (one per second). Leave empty to disable the ticker.
 
 ## Run
