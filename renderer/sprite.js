@@ -3,7 +3,7 @@ const SPRITES = {
   squat:  './img/squat.png',
   roar:   './img/roar.png',
   walk1:  './img/normal.png',
-  walk2:  './img/normal.png'
+  walk2:  './img/walk.png'
 };
 
 const ALPHA_THRESHOLD = 32;
